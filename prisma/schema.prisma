@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum SpotType {
+  MOTORHOME
+  TENT
+}
+
+enum BookingStatus {
+  OPEN
+  PAID
+  COMPLETED
+  CANCELLED
+}
+
+model Spot {
+  id           Int       @id @default(autoincrement())
+  placeId      String    @unique
+  name         String
+  type         SpotType
+  dayPriceCents Int
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  bookings     Booking[]
+}
+
+model Booking {
+  id             Int             @id @default(autoincrement())
+  customerName   String
+  customerEmail  String
+  arrivalDate    DateTime
+  departureDate  DateTime
+  totalDays      Int
+  totalCents     Int
+  status         BookingStatus   @default(OPEN)
+  notes          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  spotId         Int
+  spot           Spot            @relation(fields: [spotId], references: [id], onDelete: Restrict)
+  statusHistory  StatusHistory[]
+}
+
+model StatusHistory {
+  id          Int           @id @default(autoincrement())
+  bookingId   Int
+  booking     Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fromStatus  BookingStatus?
+  toStatus    BookingStatus
+  reason      String?
+  changedAt   DateTime      @default(now())
+}
